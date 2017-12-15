@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.1;
 
 contract Primary {
     address public author; //wallet/contract address of the author
@@ -8,7 +8,7 @@ contract Primary {
     string public reference;
     bytes32 public digest;
     string public auxileryData;
-    bool init;
+    bool public init;
     
     function Primary        (   
                                 string ref,
@@ -20,6 +20,7 @@ contract Primary {
         digest = dig;
         author = msg.sender;
         auxileryData = aux;
+        init = true;
     }
     
     function AddCitedBy (
@@ -28,19 +29,6 @@ contract Primary {
         cited_by.push(article);
         return true;
     }
-    
-  /*  function CheckAcceptable(
-                                uint currentUpdates,
-                                uint maxUpdates) internal returns (int upds) {
-        uint prospectiveUpdates = 0;
-        for(uint i = 0; i < cited_by.length; i++){
-            prospectiveUpdates++;
-            if(prospectiveUpdates > maxUpdates){
-                return -1;
-            }
-        }
-        for(uint i = 0; i < cited_by.length;)
-    }*/
     
     modifier onlyAuthor {
         require(msg.sender == author);
@@ -78,10 +66,13 @@ contract Article is Primary{
     function NotifyCitations    () external onlyAuthor {
         for (uint i = 0; i < citations.length; i++){
             Article a = Article(citations[i]);
-            a.AddCitedBy(this);
+            if(!a.AddCitedBy(this)){
+                revert();
+            }
         }
         init = true;
     }
-    
-    
 }
+
+//exists so organizers may set global parameters for people/contracts in their
+//organization.
